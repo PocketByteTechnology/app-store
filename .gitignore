@@ -1,1 +1,9 @@
 .wakatime-project
+
+build
+sdkconfig
+
+# Keep these off the repo for now since the Pocketbyte library has not yet been released
+managed_components
+main/idf_component.yml
+dependencies.lock
