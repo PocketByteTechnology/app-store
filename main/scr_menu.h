@@ -7,6 +7,7 @@ extern "C" {
 #endif
 
 lv_obj_t *scr_menu_create(void);
+const char *scr_menu_get_selected_id(void);
 void scr_menu_nav_up(void);
 void scr_menu_nav_down(void);
 

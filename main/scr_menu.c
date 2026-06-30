@@ -4,10 +4,6 @@
 #include "wifi.h"
 #include "theme.h"
 
-#define DB_URL "https://raw.githubusercontent.com/PocketByteTechnology/apps/main/"
-#define APPS_URL DB_URL"/apps"
-#define CATALOG_JSON_URL DB_URL"catalog.json"
-
 #define PAGE_SIZE 16
 
 static size_t app_count = 0;
@@ -42,14 +38,14 @@ static void parse_catalog_json()
 
     free(catalog_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
 
-    const cJSON *count = cJSON_GetObjectItemCaseSensitive(root, "count");
+    const cJSON *count = cJSON_GetObjectItem(root, "count");
     if (cJSON_IsNumber(count)) {
         app_count = count->valueint;
 
         app_list = malloc(app_count * sizeof(char *));
     }
 
-    const cJSON *apps = cJSON_GetObjectItemCaseSensitive(root, "apps");
+    const cJSON *apps = cJSON_GetObjectItem(root, "apps");
     if (cJSON_IsArray(apps)) {
         cJSON *id = NULL;
         size_t list_index = 0;
@@ -115,12 +111,14 @@ lv_obj_t *scr_menu_create(void)
     lv_obj_align(page_label, LV_ALIGN_TOP_RIGHT, -4, -4);
 
     parse_catalog_json();
-    ESP_LOGI("scr_menu", "app_count: %d", app_count);
-    ESP_LOGI("scr_menu", "apps: %s, %s", app_list[0], app_list[1]);
-
     rebuild_list();
 
     return menu_scr;
+}
+
+const char *scr_menu_get_selected_id(void)
+{
+    return app_list[selected_idx];
 }
 
 void scr_menu_nav_up(void)

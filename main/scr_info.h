@@ -14,10 +14,11 @@ typedef struct {
     char version[8];
     char author[32];
     char date[12];
-    char image_path[64];
+    char image[64];
 } app_entry_t;
 
-lv_obj_t *scr_info_create(void);
+lv_obj_t *scr_info_create(const char *id);
+void scr_info_destroy(void);
 
 #ifdef __cplusplus
 }

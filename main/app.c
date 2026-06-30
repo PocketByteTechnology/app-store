@@ -4,6 +4,7 @@
 #include <gfx_lvgl.h>
 #include "wifi.h"
 #include "scr_menu.h"
+#include "scr_info.h"
 
 typedef enum {
     SCREEN_MENU,
@@ -11,7 +12,7 @@ typedef enum {
 } screen_t;
 
 static screen_t current_screen = SCREEN_MENU;
-static lv_obj_t *menu_screen = NULL;
+static lv_obj_t *menu_scr = NULL;
 
 void app_init(void)
 {
@@ -25,15 +26,7 @@ void app_init(void)
 
     wifi_init();
 
-    // download_ctx_t catalog_ctx = {
-    //     .buf = NULL,
-    //     .size = 0,
-    // };
-    // wifi_https_get_request(&catalog_ctx, CATALOG_URL);
-    // ESP_LOGI("App", "\n%s", catalog_ctx.buf);
-    // free(catalog_ctx.buf);
-
-    menu_screen = scr_menu_create();
+    menu_scr = scr_menu_create();
     current_screen = SCREEN_MENU;
 }
 
@@ -48,12 +41,21 @@ void app_update(void)
             } else if (pb_gamepad_button_pressed(PB_DOWN)) {
                 scr_menu_nav_down();
             }
-
             if (pb_gamepad_button_pressed(PB_FUNC)) {
                 pb_sys_reboot_to_loader();
             }
+            if (pb_gamepad_button_pressed(PB_A)) {
+                lv_obj_t *info_scr = scr_info_create(scr_menu_get_selected_id());
+                lv_screen_load(info_scr);
+                current_screen = SCREEN_INFO;
+            }
             break;
         case SCREEN_INFO:
+            if (pb_gamepad_button_pressed(PB_B)) {
+                scr_info_destroy();
+                lv_screen_load(menu_scr);
+                current_screen = SCREEN_MENU;
+            }
             break;
     }
 
