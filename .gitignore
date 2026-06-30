@@ -7,3 +7,5 @@ sdkconfig
 managed_components
 main/idf_component.yml
 dependencies.lock
+
+*.backup

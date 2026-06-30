@@ -5,7 +5,7 @@
 // Dark mode
 #define BG0 0x000000
 #define FG0 0xf5f5f5
-#define FG1 0x353535
+#define FG1 0x555555
 
 // Light mode
 // #define BG0 0xf5f5f5
