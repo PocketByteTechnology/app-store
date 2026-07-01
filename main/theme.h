@@ -12,5 +12,6 @@
 // #define FG0 0x0a0a0a
 // #define FG1 0xcacaca
 
+LV_FONT_DECLARE(inter_10)
 LV_FONT_DECLARE(inter_12)
 LV_FONT_DECLARE(inter_14)

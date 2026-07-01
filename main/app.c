@@ -3,6 +3,7 @@
 #include <pocketbyte.h>
 #include <gfx_lvgl.h>
 #include "wifi.h"
+#include "theme.h"
 #include "scr_menu.h"
 #include "scr_info.h"
 
@@ -14,6 +15,18 @@ typedef enum {
 static screen_t current_screen = SCREEN_MENU;
 static lv_obj_t *menu_scr = NULL;
 
+static void show_loading_screen(void)
+{
+    lv_obj_t *scr = lv_scr_act();
+    lv_obj_set_style_bg_color(scr, lv_color_hex(BG0), LV_PART_MAIN);
+    
+    lv_obj_t *label = lv_label_create(scr);
+    lv_label_set_text(label, "Wi-Fi connecting...");
+    lv_obj_set_align(label, LV_ALIGN_CENTER);
+    lv_obj_set_style_text_font(label, &inter_14, LV_PART_MAIN);
+    lv_obj_set_style_text_color(label, lv_color_hex(FG0), LV_PART_MAIN);
+}
+
 void app_init(void)
 {
     pb_sys_handle_pending_reboot();
@@ -23,6 +36,9 @@ void app_init(void)
     pb_gamepad_init();
     pb_sd_init();
     pb_nvs_init(); // Wi-Fi needs NVS to be initialized
+
+    show_loading_screen();
+    pb_gfx_lvgl_tick();
 
     wifi_init();
 
