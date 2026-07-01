@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,6 +13,7 @@ extern "C" {
 typedef struct {
     char *buf;
     int size;
+    FILE *file;
 } download_ctx_t;
 
 void wifi_init(void);

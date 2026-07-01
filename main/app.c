@@ -72,6 +72,14 @@ void app_update(void)
                 lv_screen_load(menu_scr);
                 current_screen = SCREEN_MENU;
             }
+            if (pb_gamepad_button_pressed(PB_A)) {
+                scr_info_download_app();
+            }
+            if (pb_gamepad_button_pressed(PB_UP)) {
+                // Consume event
+            } else if (pb_gamepad_button_pressed(PB_DOWN)) {
+                // Consume event
+            }
             break;
     }
 

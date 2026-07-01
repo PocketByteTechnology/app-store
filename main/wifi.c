@@ -129,20 +129,29 @@ static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
     switch (evt->event_id) {
         case HTTP_EVENT_ON_DATA:
             if (evt->data_len > 0) {
-                int new_size = ctx->size + evt->data_len;
-                char *new_buf = realloc(ctx->buf, new_size + 1); // +1 for null-terminator
+                if (ctx->file != NULL) {
+                    size_t written = fwrite(evt->data, sizeof(char), evt->data_len, ctx->file);
+                    if (written < evt->data_len) {
+                        ESP_LOGE(TAG, "Flash write error. Might be full?");
+                        return ESP_FAIL;
+                    }
+                    ctx->size += written;
+                } else {
+                    int new_size = ctx->size + evt->data_len;
+                    char *new_buf = realloc(ctx->buf, new_size + 1); // +1 for null-terminator
                 
-                if (new_buf == NULL) {
-                    ESP_LOGE(TAG, "Failed to allocate memory for chunk!");
-                    return ESP_FAIL;
+                    if (new_buf == NULL) {
+                        ESP_LOGE(TAG, "Failed to allocate memory for chunk!");
+                        return ESP_FAIL;
+                    }
+                
+                    ctx->buf = new_buf;
+                    memcpy(ctx->buf + ctx->size, evt->data, evt->data_len);
+                    ctx->size = new_size;
+                    ctx->buf[ctx->size] = '\0';
+                
+                    ESP_LOGI(TAG, "Downloaded chunk size: %d bytes. Total: %d bytes.", evt->data_len, ctx->size);
                 }
-                
-                ctx->buf = new_buf;
-                memcpy(ctx->buf + ctx->size, evt->data, evt->data_len);
-                ctx->size = new_size;
-                ctx->buf[ctx->size] = '\0';
-                
-                ESP_LOGI(TAG, "Downloaded chunk size: %d bytes. Total: %d bytes.", evt->data_len, ctx->size);
             }
             break;
             
