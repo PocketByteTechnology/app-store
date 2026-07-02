@@ -14,6 +14,7 @@ static lv_obj_t *menu_scr = NULL;
 static lv_obj_t *list = NULL;
 static lv_obj_t *list_btns[PAGE_SIZE];
 static lv_obj_t *page_label;
+static lv_obj_t *status_label;
 
 static void parse_catalog_json()
 {
@@ -69,6 +70,14 @@ static void highlight_item(int idx)
     }
 }
 
+static void update_wifi_status(void)
+{
+    const char *text = wifi_is_connected() ? "Wi-Fi Connected" : "Wi-Fi Not Connected";
+    lv_label_set_text(status_label, text);
+    lv_obj_update_layout(status_label);
+    lv_obj_align_to(status_label, page_label, LV_ALIGN_OUT_LEFT_MID, -8, 0);
+}
+
 static void rebuild_list(void)
 {
     lv_obj_clean(list);
@@ -84,6 +93,8 @@ static void rebuild_list(void)
     }
 
     highlight_item(0);
+
+    update_wifi_status();
 }
 
 lv_obj_t *scr_menu_create(void)
@@ -105,6 +116,12 @@ lv_obj_t *scr_menu_create(void)
     lv_obj_set_style_text_font(page_label, &inter_12, LV_PART_MAIN);
     lv_obj_set_style_text_color(page_label, lv_color_hex(FG1), LV_PART_MAIN);
     lv_obj_align(page_label, LV_ALIGN_TOP_RIGHT, -4, -4);
+
+    status_label = lv_label_create(menu_scr);
+    lv_label_set_text(status_label, "---");
+    lv_obj_set_style_text_font(status_label, &inter_12, LV_PART_MAIN);
+    lv_obj_set_style_text_color(status_label, lv_color_hex(FG1), LV_PART_MAIN);
+    lv_obj_align_to(status_label, page_label, LV_ALIGN_OUT_LEFT_MID, -8, 0);
 
     parse_catalog_json();
     rebuild_list();
@@ -133,4 +150,16 @@ void scr_menu_nav_down(void)
 
     selected_idx = (selected_idx + 1) % app_count;
     highlight_item(selected_idx);
+}
+
+void scr_menu_nav_left(void)
+{
+    if (app_count == 0)
+        return;
+}
+
+void scr_menu_nav_right(void)
+{
+    if (app_count == 0)
+        return;
 }

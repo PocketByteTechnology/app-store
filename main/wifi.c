@@ -49,6 +49,7 @@ static char wifi_ssid[128];
 static char wifi_pass[128];
 static EventGroupHandle_t wifi_event_group;
 static int num_retries;
+static bool isConnected;
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
@@ -63,11 +64,13 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
             xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
         }
         ESP_LOGI(TAG, "Failed to connect to the access point");
+        isConnected = false;
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
         num_retries = 0;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+        isConnected = true;
     }
 }
 
@@ -174,6 +177,11 @@ void wifi_init(void)
     } else {
         ESP_LOGE(TAG, "Unexpected event");
     }
+}
+
+bool wifi_is_connected(void)
+{
+    return isConnected;
 }
 
 static esp_err_t http_event_handler(esp_http_client_event_t *evt) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,7 @@ typedef struct {
 } download_ctx_t;
 
 void wifi_init(void);
+bool wifi_is_connected(void);
 void wifi_https_get_request(download_ctx_t *ctx, const char *url);
 
 #ifdef __cplusplus
