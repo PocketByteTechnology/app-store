@@ -25,15 +25,14 @@ static void parse_info_json(const char *id)
     wifi_https_get_request(&info_ctx, get_url);
 
     cJSON *root = cJSON_Parse(info_ctx.buf);
+    free(info_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
     if (root == NULL) {
         const char *error = cJSON_GetErrorPtr();
         if (error != NULL) {
             ESP_LOGE("scr_menu", "cJSON error: %s", error);
         }
-        goto end;
+        cJSON_Delete(root);
     }
-
-    free(info_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
 
     lv_strcpy(entry.id, id);
 
@@ -69,9 +68,6 @@ static void parse_info_json(const char *id)
     if (cJSON_IsString(binary) && binary->valuestring != NULL) {
         lv_strcpy(entry.binary, binary->valuestring);
     }
-
-end:
-    cJSON_Delete(root);
 }
 
 static void create_img_dsc()
@@ -272,7 +268,7 @@ void scr_info_download_app(void)
             .file = NULL
         };
 
-        // For binaries and images, open file first to stream directly to it
+        // For binaries and images, open the file first to stream directly to it
         if (i > 0) { 
             download_ctx.file = fopen(file_path, "wb");
             if (download_ctx.file == NULL) {

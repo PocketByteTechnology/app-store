@@ -28,15 +28,14 @@ static void parse_catalog_json()
     }
 
     cJSON *root = cJSON_Parse(catalog_ctx.buf);
+    free(catalog_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
     if (root == NULL) {
         const char *error = cJSON_GetErrorPtr();
         if (error != NULL) {
             ESP_LOGE("scr_menu", "cJSON error: %s", error);
         }
-        goto end;
+        cJSON_Delete(root);
     }
-
-    free(catalog_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
 
     const cJSON *count = cJSON_GetObjectItem(root, "count");
     if (cJSON_IsNumber(count)) {
@@ -57,9 +56,6 @@ static void parse_catalog_json()
             }
         }
     }
-
-end:
-    cJSON_Delete(root);
 }
 
 static void highlight_item(int idx)

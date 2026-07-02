@@ -1,4 +1,5 @@
 #include "wifi.h"
+#include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
@@ -7,9 +8,9 @@
 #include <esp_wifi.h>
 #include "esp_http_client.h"
 #include <esp_crt_bundle.h>
+#include <pocketbyte.h>
+#include <cJSON.h>
 
-#define EXAMPLE_ESP_WIFI_SSID CONFIG_ESP_WIFI_SSID
-#define EXAMPLE_ESP_WIFI_PASS CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
 
 #if CONFIG_ESP_STATION_EXAMPLE_WPA3_SAE_PWE_HUNT_AND_PECK
@@ -44,6 +45,8 @@
 #define WIFI_FAIL_BIT BIT1
 
 static const char *TAG = "WIFI";
+static char wifi_ssid[128];
+static char wifi_pass[128];
 static EventGroupHandle_t wifi_event_group;
 static int num_retries;
 
@@ -68,8 +71,56 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t e
     }
 }
 
+static void parse_wifi_json()
+{
+    FILE *file = fopen(MOUNT_POINT"/wifi.json", "r");
+    if (file == NULL) {
+        ESP_LOGE(TAG, "Failed to open wifi.json");
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *buf = malloc(size + 1); // +1 for the null terminator
+    if (buf == NULL) {
+        ESP_LOGE(TAG, "Failed to allocate buffer for wifi.json");
+        fclose(file);
+        return;
+    }
+
+    size_t read_bytes = fread(buf, sizeof(char), size, file);
+    buf[read_bytes] = '\0';
+    fclose(file);
+
+    cJSON *root = cJSON_Parse(buf);
+    free(buf);
+    if (root == NULL) {
+        const char *error = cJSON_GetErrorPtr();
+        if (error != NULL) {
+            ESP_LOGE(TAG, "cJSON error: %s", error);
+        }
+        goto end;
+    }
+
+    cJSON *ssid = cJSON_GetObjectItem(root, "ssid");
+    if (cJSON_IsString(ssid) && ssid->valuestring != NULL) {
+        strcpy(wifi_ssid, ssid->valuestring);
+    }
+    cJSON *pass = cJSON_GetObjectItem(root, "password");
+    if (cJSON_IsString(pass) && pass->valuestring != NULL) {
+        strcpy(wifi_pass, pass->valuestring);
+    }
+
+end:
+    cJSON_Delete(root);
+}
+
 void wifi_init(void)
 {
+    parse_wifi_json();
+
     wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
@@ -95,13 +146,15 @@ void wifi_init(void)
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
+            .ssid = {},
+            .password = {},
             .threshold.authmode = ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD,
             .sae_pwe_h2e = ESP_WIFI_SAE_MODE,
             .sae_h2e_identifier = EXAMPLE_H2E_IDENTIFIER,
         },
     };
+    strcpy((char *)wifi_config.sta.ssid, wifi_ssid);
+    strcpy((char *)wifi_config.sta.password, wifi_pass);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
@@ -115,9 +168,9 @@ void wifi_init(void)
                                            portMAX_DELAY);
 
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "Connected to Access Point SSID: %s password: %s", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "Connected to Access Point SSID: %s password: %s", wifi_ssid, wifi_pass);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID: %s, password: %s", EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "Failed to connect to SSID: %s, password: %s", wifi_ssid, wifi_pass);
     } else {
         ESP_LOGE(TAG, "Unexpected event");
     }
