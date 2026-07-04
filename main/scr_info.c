@@ -187,7 +187,7 @@ lv_obj_t *scr_info_create(const char *id)
                          LV_GRID_ALIGN_CENTER, 1, 1);
     lv_obj_set_style_pad_all(actions_cont, 0, LV_PART_MAIN);
     lv_obj_set_style_border_width(actions_cont, 0, LV_PART_MAIN);
-    lv_obj_set_size(actions_cont, 128, LV_SIZE_CONTENT);
+    lv_obj_set_size(actions_cont, 116, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(actions_cont, lv_color_hex(BG0), LV_PART_MAIN);
 
     lv_obj_t *launch_label = lv_label_create(actions_cont);

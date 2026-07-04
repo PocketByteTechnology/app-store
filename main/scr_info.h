@@ -10,7 +10,7 @@ typedef struct {
     // JSON data
     char id[64];
     char title[64];
-    char desc[64];
+    char desc[128];
     char genre[20];
     char version[8];
     char author[32];
