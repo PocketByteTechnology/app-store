@@ -8,7 +8,7 @@
 #include <esp_log.h>
 #include <pocketbyte.h>
 #include <cJSON.h>
-#include "wifi.h"
+#include "store.h"
 #include "theme.h"
 
 static lv_obj_t *info_scr = NULL;
@@ -18,14 +18,13 @@ static void parse_info_json(const char *id)
 {
     char get_url[128];
     lv_snprintf(get_url, sizeof(get_url), APPS_URL"%s/info.json", id);
-    download_ctx_t info_ctx = {
-        .buf = NULL,
-        .size = 0,
-    };
-    wifi_https_get_request(&info_ctx, get_url);
 
-    cJSON *root = cJSON_Parse(info_ctx.buf);
-    free(info_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
+    char *buf = NULL;
+    size_t size = 0;
+    pb_http_request(&(pb_http_request_t){.method = PB_HTTP_GET, .url = get_url}, &buf, &size, NULL);
+
+    cJSON *root = cJSON_Parse(buf);
+    free(buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
     if (root == NULL) {
         const char *error = cJSON_GetErrorPtr();
         if (error != NULL) {
@@ -75,14 +74,15 @@ static void create_img_dsc()
     char get_url[128];
     lv_snprintf(get_url, sizeof(get_url), APPS_URL"%s/%s", entry.id, entry.image);
 
-    download_ctx_t image_ctx = { .buf = NULL, .size = 0 };
-    wifi_https_get_request(&image_ctx, get_url);
+    char *buf = NULL;
+    size_t size = 0;
+    pb_http_request(&(pb_http_request_t){.method = PB_HTTP_GET, .url = get_url}, &buf, &size, NULL);
 
-    if (!image_ctx.buf || image_ctx.size <= 12) {
+    if (!buf || size <= 12) {
         goto end;
     }
 
-    size_t pixel_data_size = image_ctx.size - 12;
+    size_t pixel_data_size = size - 12;
 
     entry.img_dsc = heap_caps_malloc(sizeof(lv_image_dsc_t), MALLOC_CAP_SPIRAM); 
     if (!entry.img_dsc) goto end;
@@ -95,7 +95,7 @@ static void create_img_dsc()
         goto end;
     }
     
-    memcpy(pixel_buf, image_ctx.buf + 12, pixel_data_size);
+    memcpy(pixel_buf, buf + 12, pixel_data_size);
 
     entry.img_dsc->header.magic = LV_IMAGE_HEADER_MAGIC;
     entry.img_dsc->header.cf = LV_COLOR_FORMAT_RGB565;
@@ -106,7 +106,7 @@ static void create_img_dsc()
     entry.img_dsc->data = pixel_buf;
 
 end:
-    free(image_ctx.buf);
+    free(buf);
 }
 
 lv_obj_t *scr_info_create(const char *id)
@@ -262,32 +262,33 @@ void scr_info_download_app(void)
         lv_snprintf(download_file_path, sizeof(download_file_path), "%s/%s", download_directory, files_to_download[i]);
         lv_snprintf(file_path, sizeof(file_path), "%s/%s", directory, files_to_download[i]);
 
-        download_ctx_t download_ctx = {
-            .buf = NULL,
-            .size = 0,
-            .file = NULL
-        };
-
-        // For binaries and images, open the file first to stream directly to it
-        if (i > 0) { 
-            download_ctx.file = fopen(file_path, "wb");
-            if (download_ctx.file == NULL) {
-                ESP_LOGE("scr_info", "Failed to create target file: %s", file_path);
-                continue;
+        // For binaries and images, stream directly to the file. Otherwise corruption occurs, breaking binaries
+        // and making images have garbage pixels.
+        if (i > 0) {
+            if (pb_http_download(download_file_path, file_path, NULL) != ESP_OK) {
+                ESP_LOGE("scr_info", "Failed to download %s", files_to_download[i]);
             }
-        }
-
-        wifi_https_get_request(&download_ctx, download_file_path);
-
-        if (download_ctx.file != NULL) {
-            fclose(download_ctx.file);
         } else {
-            FILE *file = fopen(file_path, "wb");
-            if (file) {
-                fwrite(download_ctx.buf, 1, download_ctx.size, file);
-                fclose(file);
+            char *buf = NULL;
+            size_t size = 0;
+            pb_http_request(
+                &(pb_http_request_t) {
+                    .method = PB_HTTP_GET,
+                    .url = download_file_path
+                },
+                &buf,
+                &size,
+                NULL
+            );
+
+            if (buf != NULL) {
+                FILE *file = fopen(file_path, "wb");
+                if (file) {
+                    fwrite(buf, 1, size, file);
+                    fclose(file);
+                }
+                free(buf);
             }
-            free(download_ctx.buf);
         }
     }
 }

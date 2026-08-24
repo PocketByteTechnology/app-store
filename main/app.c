@@ -2,7 +2,6 @@
 #include <esp_log.h>
 #include <pocketbyte.h>
 #include <gfx_lvgl.h>
-#include "wifi.h"
 #include "theme.h"
 #include "scr_menu.h"
 #include "scr_info.h"
@@ -40,7 +39,8 @@ void app_init(void)
     show_loading_screen();
     pb_gfx_lvgl_tick();
 
-    wifi_init();
+    pb_wifi_init();
+    pb_wifi_connect_blocking(10000);
 
     menu_scr = scr_menu_create();
     current_screen = SCREEN_MENU;

@@ -1,7 +1,8 @@
 #include "scr_menu.h"
 #include <pocketbyte.h>
 #include <cJSON.h>
-#include "wifi.h"
+#include <string.h>
+#include "store.h"
 #include "theme.h"
 
 #define PAGE_SIZE 16
@@ -18,18 +19,25 @@ static lv_obj_t *status_label;
 
 static void parse_catalog_json()
 {
-    download_ctx_t catalog_ctx = {
-        .buf = NULL,
-        .size = 0,
-    };
-    wifi_https_get_request(&catalog_ctx, CATALOG_JSON_URL);
-    if (catalog_ctx.buf == NULL) {
+    char *buf = NULL;
+    size_t size = 0;
+    pb_http_request(
+        &(pb_http_request_t) {
+            .method = PB_HTTP_GET,
+            .url = CATALOG_JSON_URL
+        },
+        &buf,
+        &size,
+        NULL
+    );
+
+    if (buf == NULL) {
         ESP_LOGE("scr_menu", "Failed to download catalog JSON");
         return;
     }
 
-    cJSON *root = cJSON_Parse(catalog_ctx.buf);
-    free(catalog_ctx.buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
+    cJSON *root = cJSON_Parse(buf);
+    free(buf); // Downloaded buffer is no longer needed since the content of the JSON resides in root. Best to just free this immediately.
     if (root == NULL) {
         const char *error = cJSON_GetErrorPtr();
         if (error != NULL) {
@@ -72,7 +80,7 @@ static void highlight_item(int idx)
 
 static void update_wifi_status(void)
 {
-    const char *text = wifi_is_connected() ? "Wi-Fi Connected" : "Wi-Fi Not Connected";
+    const char *text = pb_wifi_is_connected() ? "Wi-Fi Connected" : "Wi-Fi Not Connected";
     lv_label_set_text(status_label, text);
     lv_obj_update_layout(status_label);
     lv_obj_align_to(status_label, page_label, LV_ALIGN_OUT_LEFT_MID, -8, 0);

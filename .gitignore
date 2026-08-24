@@ -9,3 +9,6 @@ main/idf_component.yml
 dependencies.lock
 
 *.backup
+
+# Hack Club Macondo (Hackatime)
+.wakatime-project
