@@ -3,3 +3,18 @@
 This is the official app store application for Pocketbyte.
 
 Download new games, apps, and other files directly from your device using Wi-Fi. No USB cable or computer needed.
+
+## Philosophy
+
+The Pocketbyte App Store is self-contained and follows a very UNIX philosophy.
+
+It has two sole purposes:
+
+- Fetch and display a list of apps from the catalog
+- Allow the user to download apps onto the SD card
+
+It does these two things and only these two things. But it does it them very well.
+
+## Testing on PC
+
+To run this app on your computer without needing a physical Pocketbyte DevKit, use the [Pocketbyte Simulator tool](https://github.com/PocketByteTechnology/simulator).
