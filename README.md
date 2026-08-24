@@ -4,6 +4,8 @@ This is the official app store application for Pocketbyte.
 
 Download new games, apps, and other files directly from your device using Wi-Fi. No USB cable or computer needed.
 
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/8ffac58c-8c27-462d-8ebf-ab221cd94408" />
+
 ## Philosophy
 
 The Pocketbyte App Store is self-contained and follows a very UNIX philosophy.
