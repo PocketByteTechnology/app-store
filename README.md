@@ -37,3 +37,5 @@ The format looks like this:
 To run this app on your computer without needing a physical Pocketbyte DevKit, use the [Pocketbyte Simulator tool](https://github.com/PocketByteTechnology/simulator).
 
 You do not need a `wifi.json` if you are using the simulator - it will use your computer's current connection.
+
+See [this](https://youtu.be/5Q8oLyBFvU8?si=3wA5SpwJKDJq5Q4h) video tutorial on how to run the app store on the simulator.
