@@ -17,6 +17,23 @@ It has two sole purposes:
 
 It does these two things and only these two things. But it does it them very well.
 
+Unlike other "stores," such as Steam, Google Play, etc., there are _zero_ monetization features. You do not have to pay to download anything - all of it is 100% free as long as you have a Wi-Fi connection.
+
+## Usage
+
+On your Pocketbyte DevKit's SD card, you must add a `wifi.json` file at the root so that your device can connect to Wi-Fi.
+
+The format looks like this:
+
+```json
+{
+  "ssid": "<wifi-ssid>",
+  "password": "<wifi-password>"
+}
+```
+
 ## Testing on PC
 
 To run this app on your computer without needing a physical Pocketbyte DevKit, use the [Pocketbyte Simulator tool](https://github.com/PocketByteTechnology/simulator).
+
+You do not need a `wifi.json` if you are using the simulator - it will use your computer's current connection.
